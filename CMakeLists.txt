@@ -3,5 +3,5 @@ project(AutoCorr)
 
 message(STATUS "Building AutoCorr")
 
-add_subdirectory(aCorrs-OTF)
+add_subdirectory(aCorrsOTF)
 

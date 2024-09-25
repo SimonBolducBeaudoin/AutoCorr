@@ -1,6 +1,8 @@
 #!/bin/env/python
 #! -*- coding: utf-8 -*-
 
+from __future__ import division
+from past.utils import old_div
 import numpy
 #from SBB.Utilities.General_tools import *
 
@@ -19,7 +21,7 @@ def window_after_2ns(S2):
     def damp(x,epsilon,x_0):
         return numpy.exp((-1)*epsilon*(x-x_0))
     def compute_epsilon(red,after_lenght):
-        return -numpy.log(1.0/red)/(after_lenght)
+        return old_div(-numpy.log(1.0/red),(after_lenght))
     red = 1000
     L_0 = 65
     epsilon = compute_epsilon(red,after_lenght=L_0)
@@ -55,7 +57,7 @@ class Tunnel_junction(object):
     @staticmethod
     def cothc(x):
         """ x*coth(x) """
-        ret             = x/numpy.tanh(x)
+        ret             = old_div(x,numpy.tanh(x))
         ret[numpy.isnan(ret)] = 1.
         return ret
     @staticmethod
@@ -66,7 +68,7 @@ class Tunnel_junction(object):
         on prend le facteur 1/2k (i.e. l'abscisse n'existe pas sur les fréquence negative)
         Sinon on prend 1/4K
         """
-        return SII/(2.0*Z_jct*_kb)
+        return old_div(SII,(2.0*Z_jct*_kb))
     @staticmethod
     def K_to_Vsquare(SII,Z_jct):
         """ 
@@ -90,7 +92,7 @@ class Tunnel_junction(object):
         """
         Converts a SII with no unit to A**2/Hz
         """
-        return (2.0*_kb*Te)*SII/Z_jct
+        return old_div((2.0*_kb*Te)*SII,Z_jct)
     @staticmethod
     def V_th(f,Te=None,epsilon=0.01):
         """
@@ -104,9 +106,9 @@ class Tunnel_junction(object):
         """
         if Te :
             cst = numpy.arctanh(1.0/(1.0+epsilon)) # coth(cst) = 1.01
-            return numpy.max(numpy.array([  numpy.abs( cst*2.0*_kb*Te - _h*f ) ,  numpy.abs( cst*2.0*_kb*Te + _h*f ) ]),axis=0)/_e
+            return old_div(numpy.max(numpy.array([  numpy.abs( cst*2.0*_kb*Te - _h*f ) ,  numpy.abs( cst*2.0*_kb*Te + _h*f ) ]),axis=0),_e)
         else :
-            return _h*f/_e
+            return old_div(_h*f,_e)
     @staticmethod
     def SII_eq(E,Te):
         """
@@ -119,7 +121,7 @@ class Tunnel_junction(object):
         Te : numpy array 
             [K]
         """
-        return Tunnel_junction.cothc(E/(2.0*_kb*Te))
+        return Tunnel_junction.cothc(old_div(E,(2.0*_kb*Te)))
     @staticmethod
     def SII_eq_Vsquare(E,R,Te):
         """

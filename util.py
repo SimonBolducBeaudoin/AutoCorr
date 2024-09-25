@@ -1,6 +1,8 @@
 #!/bin/env/python
 #! -*- coding: utf-8 -*-
 
+from __future__ import division
+from past.utils import old_div
 import numpy
 from SBB.Numpy_extra.numpy_extra import symetrize,find_nearest_A_to_a
 from SBB.Math_extra.Math_extra import fourier_transform
@@ -12,7 +14,7 @@ def binV2_to_A2(S2,R_acq,mv_per_bin):
     """
     Used to convert SII(t)[bin_V**2] to SII(t)[A**2]
     """
-    return S2*(mv_per_bin*1.0e-3)**2/(R_acq**2)
+    return old_div(S2*(mv_per_bin*1.0e-3)**2,(R_acq**2))
     
 def SII_dc_of_t_to_spectrum(S2,dt):
     S2_windowed       = window_after_2ns(S2)
@@ -40,7 +42,7 @@ def compute_Ith(f,f_max,Te,eps=0.01,R_jct=50.0):
     _,f_max_idx = find_nearest_A_to_a(f_max,f)
     f_max_idx = f_max_idx[0]
     V_th[f_max_idx:] = V_th[f_max_idx]
-    return V_th/R_jct
+    return old_div(V_th,R_jct)
 
 def compute_noiseTemp(SII,G,R=50.0):
     """
@@ -52,7 +54,7 @@ def compute_noiseTemp(SII,G,R=50.0):
     Created
     I choose the factor 2.0 instead of 4.0 in Jonhson-Nyquist Noise
     """
-    return SII*R/(2.0*C.k*G)
+    return old_div(SII*R,(2.0*C.k*G))
 
 def compute_SII_sym_and_antisym(SII,axis=-1,interlacing=False):
     """

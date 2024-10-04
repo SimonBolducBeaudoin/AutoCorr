@@ -123,3 +123,4 @@ dmypy.json
 .pyre/
 __pycache__/
 *.bak
+.clang-format

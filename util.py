@@ -3,9 +3,9 @@
 
 from __future__ import division
 from past.utils import old_div
-import numpy
+import numpy as _np
 from SBB.Numpy_extra.numpy_extra import symetrize,find_nearest_A_to_a
-from SBB.Math_extra.Math_extra import fourier_transform
+from SBB.Math_extra.math import fourier_transform
 from SBB.Phys import Tunnel_Junction 
 
 from SBB.AutoCorr.Deprecated import window_after_2ns
@@ -19,7 +19,7 @@ def binV2_to_A2(S2,R_acq,mv_per_bin):
 def SII_dc_of_t_to_spectrum(S2,dt):
     S2_windowed       = window_after_2ns(S2)
     S2_sym            = symetrize (S2_windowed)
-    return numpy.abs(fourier_transform(S2_sym,dt))
+    return _np.abs(fourier_transform(S2_sym,dt))
     
 def compute_Ith(f,f_max,Te,eps=0.01,R_jct=50.0):
     """
@@ -81,6 +81,36 @@ def compute_SII_sym_and_antisym(SII,axis=-1,interlacing=False):
     return S2_sym.swapaxes(axis,-1),S2_anti.swapaxes(axis,-1)
     
     
+import numba as _nb
+from fractions import Fraction as _Fraction
+from typeguard import typechecked as _typechecked
+
+@_nb.guvectorize(['void(float64[:,:], int64,int64 ,float64[:,:])'], '(n,m),(),(),(n,l)', target='parallel')
+def _symmetrize_SIIphi(sii,p,q,sii_sym):
+    """
+    Symmetrize properly the photoexcited SII :
+        sii(phi,-tau) =  sii( (phi-Omega*tau)%2pi , tau )
+        with    tau = m/R (R is the sampling rate)
+                phi = 2*pi*n F/R (F is the pump's frequency)
+                F/R = p/q (the reduced fraction)
+        ==>
+        sii(n,-m) =  sii(  ((n-m)*p/q)%1 , m ) but (n-m)*p/q)%1 is in [0,1[ it needs to be translated to indexes.
+        sii[n,-m] =  sii[ (n-m)%q , m ] the right indexes
+    """
+    l_phi,l_tau = sii.shape
+    for i in range(l_phi):
+        for j in range(l_tau):
+            sii_sym[i,j]  = sii[i,j]   # positive tau just copied
+            sii_sym[i,-j] = sii[(i-j)%q,j] # negative tau
+
+@_typechecked
+def symmetrize_SIIphi(sii: _np.ndarray, F: int, R: int = int(32e9)) -> _np.ndarray:
+    sii_sym = _np.zeros( sii.shape[:-1] + (sii.shape[-1]*2-1,) )
+    frac=_Fraction(F,R)
+    p=frac.numerator
+    q=frac.denominator
+    _symmetrize_SIIphi(sii,p,q,sii_sym)
+    return sii_sym
     
     
     

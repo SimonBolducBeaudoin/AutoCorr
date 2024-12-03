@@ -112,6 +112,21 @@ def symmetrize_SIIphi(sii: _np.ndarray, F: int, R: int = int(32e9)) -> _np.ndarr
     _symmetrize_SIIphi(sii,p,q,sii_sym)
     return sii_sym
     
+@_nb.guvectorize(['void(float64[:],float64[:])'], '(m)->(m)', target='parallel')
+def phase_skip(phi,res):
+    """
+    Corrects for the phases skips of pi in SII(phi,f)
+    Return the corrected phase
+    """
+    res[:] = phi[:]
+    diff = _np.round((phi[1::]-phi[0:-1:])/(_np.pi))*_np.pi
+    for i in range(len(phi)):
+        res[i] -= diff[:i].sum()
+
+@_nb.guvectorize(['void(complex128[:],float64[:],complex128[:])'], '(m),(m)->(m)', target='parallel')        
+def set_phase(X,phi,res):
+    r = _np.abs(X)
+    res[:] = (r*_np.exp(1j*phi))[:]
     
     
     

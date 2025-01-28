@@ -2,3 +2,7 @@
 	path = aCorrsOTF
 	url = https://github.com/SimonBolducBeaudoin/aCorrs-OTF.git
 	branch = devel
+[submodule "CMakeConfigs"]
+	path = CMakeConfigs
+	url = https://github.com/SimonBolducBeaudoin/CMakeConfigs.git
+	branch = devel

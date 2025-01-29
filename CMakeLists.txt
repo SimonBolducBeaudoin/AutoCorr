@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(AutoCorr) 
 
-
 # Should be compatible with unix and 
 # windows using cygwin and crosscompiling using mingw
 # also don't forget to edit config.cmake     
@@ -65,7 +64,7 @@ target_link_libraries(${LIB_NAME}_py ${LINKS})
 #set_target_properties(${LIB_NAME} PROPERTIES PREFIX "${SHARED_LIB_PREFIX}")
 #target_link_libraries(${LIB_NAME} ${LINKS})
 
-message(STATUS "Time_quadratures")
+#message(STATUS "AutoCorr")
 set(DIR ${PROJECT_SOURCE_DIR}/obj/) 
 set(INSTALL_DIR ${PROJECT_SOURCE_DIR}) 
 install(TARGETS ${LIB_NAME}_py DESTINATION ${INSTALL_DIR} )

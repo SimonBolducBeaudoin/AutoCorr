@@ -1,0 +1,2 @@
+file(REMOVE @INSTALL_DIR@/autocorr.pyd)
+file(REMOVE @INSTALL_DIR@/autocorr.so)

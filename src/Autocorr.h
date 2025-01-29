@@ -1,5 +1,8 @@
 #pragma once
 
+
+#include <Multi_array.h>
+#include <fftw3.h>
 #include <omp_extra.h>
 #include <complex>
 #include <cstdint> // unint_t
@@ -12,4 +15,4 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 				uint64_t i_F, 
 				uint nb_fft, 
 				uint l_fft,
-				uint Mmax=-1);
+				int Mmax=-1);

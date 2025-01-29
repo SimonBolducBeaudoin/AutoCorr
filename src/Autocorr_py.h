@@ -6,6 +6,7 @@
 #include <pybind11/complex.h>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <string> 
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -21,5 +22,7 @@ np_complex_d autocorr_cyclo_py(np_int16 &np_data,
 								uint64_t R, 
 								uint nb_fft, 
 								uint l_fft,
-								uint Mmax=-1); 
+								int Mmax=-1,
+								std::string norm="backward"
+								); 
 void init_autocorr(py::module &m);

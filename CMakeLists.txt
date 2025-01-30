@@ -12,7 +12,7 @@ set(LIB_NAME autocorr)
 set(EXTERNAL_INCLUDES  Multi_array/src Omp_extra/src) 
 set(STATIC_LINKS Omp_extra/obj/omp_extra.a)      
 set(COMPILE_OPTIONS_ADD -fopenmp -fopenmp-simd )  
-set(LINKS -fopenmp -fopenmp-simd -lfftw3 -lfftw3f -lfftw3f_omp -lm)
+set(LINKS -fopenmp -fopenmp-simd -lfftw3 -lfftw3_omp -lfftw3f -lfftw3f_omp -lm)
 
 cmake_minimum_required(VERSION 3.15)
 project(${PROJECT_NAME} ) # Needs to be ontop

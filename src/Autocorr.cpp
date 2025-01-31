@@ -9,7 +9,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 				uint l_fft,
 				int Mmax)
 {
-	auto start1 = std::chrono::high_resolution_clock::now();
 	// Comput M and N
 	int M ;
 	int N ;
@@ -34,13 +33,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 	
 	int n_threads= omp_get_max_threads();
 	
-	auto end1 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed1 = end1 - start1;
-    std::cout << "Time taken for first section: " << elapsed1.count() << " seconds\n";
-	
-	
-	start1 = std::chrono::high_resolution_clock::now();
-	
 	// Cast to double
 	Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
 	// rfft result
@@ -49,12 +41,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 	Multi_array<complex_d, 3> gamma(n_threads, 2*N+1, l_fft, fftw_malloc, fftw_free);
 	// Allocate output
 	Multi_array<complex_d, 2> gamma_out( 2*N+1, l_fft, fftw_malloc, fftw_free);
-	
-	end1 = std::chrono::high_resolution_clock::now();
-    elapsed1 = end1 - start1;
-    std::cout << "Time taken for Allocation: " << elapsed1.count() << " seconds\n";
-	
-	start1 = std::chrono::high_resolution_clock::now();
 	
 	// FFTW plans
 	fftw_import_wisdom_from_filename("FFTW_Wisdom.dat");
@@ -76,23 +62,10 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 	
 	uint Nchunk = data.get_n_i()/(nb_fft*l_fft);
 	
-	end1 = std::chrono::high_resolution_clock::now();
-    elapsed1 = end1 - start1;
-    std::cout << "Time taken for FFTW stuff: " << elapsed1.count() << " seconds\n";
-	
 	#pragma omp parallel
 	{
 		manage_thread_affinity();
 		int this_thread = omp_get_thread_num();
-		
-		std::chrono::time_point<std::chrono::high_resolution_clock> s0,s1,s2;
-		std::chrono::time_point<std::chrono::high_resolution_clock> end0  ,end1  ,end2   ;
-		std::chrono::duration<double> el0(0.0)   ,el1(0.0)   ,el2(0.0)   ;
-		
-		#pragma omp single
-		{
-			start1 = std::chrono::high_resolution_clock::now();
-		}
 		
 		#pragma omp for simd collapse(3)
 		for (int k = 0; k < n_threads; k++) {
@@ -103,33 +76,17 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			}
 		}
 				
-		#pragma omp single
-		{
-			end1 = std::chrono::high_resolution_clock::now();
-			elapsed1 = end1 - start1;
-			std::cout << "Time taken for zeroing gamma: " << elapsed1.count() << " seconds\n";
-			
-			start1 = std::chrono::high_resolution_clock::now();
-		}
-		
 		#pragma omp for
 		for (uint i_chunk = 0; i_chunk < Nchunk; i_chunk++) {
 			// uint stride = nb_fft*l_fft*i_chunk ;
-			s0 = std::chrono::high_resolution_clock::now();
 			for (uint j = 0; j < nb_fft; j++) {
 				for (uint i = 0; i < l_fft; i++) {
 					gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + nb_fft*j + i];
 				}
 			}
-			end0 = std::chrono::high_resolution_clock::now();
-			el0 += end0 - s0 ;
 			
-			s1 = std::chrono::high_resolution_clock::now();
 			fftw_execute_dft_r2c(r2c_plan, (double*)gs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
-			end1 = std::chrono::high_resolution_clock::now();
-			el1 += end1 - s1 ;
 			
-			s2 = std::chrono::high_resolution_clock::now();
 			for (uint j = 0; j < nb_fft; j++) {
 				// m = 0 
 				for (uint i = 0; i <= (l_fft-1)/2; i++) {
@@ -154,20 +111,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 					}
 				}
 			}
-			end2 = std::chrono::high_resolution_clock::now();
-			el2 += end2 - s2 ;
-		}
-		
-		#pragma omp single
-		{
-			end1 = std::chrono::high_resolution_clock::now();
-			elapsed1 = end1 - start1;
-			std::cout << "Time taken for main loop: " << elapsed1.count() << " seconds\n";
-			std::cout << "Time casting int16 to double: " << el0.count() << " seconds\n";
-			std::cout << "Time fft : " << el1.count() << " seconds\n";
-			std::cout << "Time Ms : " << el2.count() << " seconds\n";
-			
-			start1 = std::chrono::high_resolution_clock::now();
 		}
 		
 		#pragma omp for simd collapse(2)
@@ -178,16 +121,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 				}
 			}
 		}
-		
-		#pragma omp single
-		{
-			end1 = std::chrono::high_resolution_clock::now();
-			elapsed1 = end1 - start1;
-			std::cout << "Time taken for parallel reduction: " << elapsed1.count() << " seconds\n";
-		}
 	}
-	
-	start1 = std::chrono::high_resolution_clock::now();
 	
 	// Symmetrize
 	for (uint i = (l_fft-1)/2 + 1; i < l_fft; i++) {
@@ -233,10 +167,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			gamma_out(j,i) *= inv_norm ;
 		}
 	}
-	
-	end1 = std::chrono::high_resolution_clock::now();
-    elapsed1 = end1 - start1;
-    std::cout << "Time taken for the rest: " << elapsed1.count() << " seconds\n";
-	
+		
 	return gamma_out ; // Move semantics
 }

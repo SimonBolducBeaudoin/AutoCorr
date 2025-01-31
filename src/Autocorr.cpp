@@ -88,7 +88,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			// uint stride = nb_fft*l_fft*i_chunk ;
 			for (uint j = 0; j < nb_fft; j++) {
 				for (uint i = 0; i < l_fft; i++) {
-					gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + nb_fft*j + i];
+					gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
 				}
 			}
 			

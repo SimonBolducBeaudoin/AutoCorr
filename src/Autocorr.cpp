@@ -75,6 +75,13 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 				}
 			}
 		}
+		#pragma omp for simd collapse(2)
+		for (int j = 0; j < 2*N+1; j++) {
+			for (uint i = 0; i < l_fft; i++) {
+				gamma_out(j,i) = 0 ;
+			}
+		}
+		
 				
 		#pragma omp for
 		for (uint i_chunk = 0; i_chunk < Nchunk; i_chunk++) {

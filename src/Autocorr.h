@@ -16,3 +16,10 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 				uint nb_fft, 
 				uint l_fft,
 				int Mmax=-1);
+
+Multi_array<complex_d, 1> 
+autocorr_cyclo_m (Multi_array<int16_t, 1> &data, 
+				uint64_t i_F, 
+				uint nb_fft, 
+				uint l_fft,
+				uint m=0);

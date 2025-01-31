@@ -2,13 +2,17 @@
 #! -*- coding: utf-8 -*-
 
 import numpy as np
-from SBB.AutoCorr.autocorr import autocorr_cyclo
+from SBB.AutoCorr.autocorr import autocorr_cyclo , autocorr_cyclo_m
 from matplotlib.pyplot import *
 import time
+
+from SBB.Omp_extra.omp_extra import set_num_threads
 
 from python_translation import *
 
 from fractions import Fraction
+
+#set_num_threads(1)
 
 # Parameters
 R = 32

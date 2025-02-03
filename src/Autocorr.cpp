@@ -1,6 +1,4 @@
 #include "Autocorr.h"
-#include <iostream>
-#include <chrono>
 
 Multi_array<complex_d, 2> 
 autocorr_cyclo (Multi_array<int16_t, 1> &data, 

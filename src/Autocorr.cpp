@@ -47,7 +47,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
                                     (double*)hs(0), // input
                                     NULL,                                       // inembed
                                     1,                                          // istride
-                                    l_fft,                                      // idist
+                                    2*(l_fft/2+1),                                      // idist
                                     reinterpret_cast<fftw_complex *>(hs(0)),                      // output
                                     NULL,                                       //  onembed
                                     1,                                          // ostride
@@ -222,7 +222,7 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
                                     (double*)hs(0), // input
                                     NULL,                                       // inembed
                                     1,                                          // istride
-                                    l_fft,                                      // idist
+                                    2*(l_fft/2+1),                              // idist
                                     reinterpret_cast<fftw_complex *>(hs(0)),                      // output
                                     NULL,                                       //  onembed
                                     1,                                          // ostride
@@ -230,8 +230,6 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
                                     FFTW_EXHAUSTIVE);
 									
     fftw_export_wisdom_to_filename("FFTW_Wisdom.dat");
-	
-	
 	
 	uint Nchunk = data.get_n_i()/(nb_fft*l_fft);
 	

@@ -34,7 +34,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 	int n_threads= omp_get_max_threads();
 	
 	// Cast to double
-	Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
+	// Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
 	// rfft result
 	Multi_array<complex_d, 3> hs(n_threads, nb_fft, l_fft/2+1, fftw_malloc, fftw_free);
 	// Allocate frency space accumulator
@@ -48,7 +48,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
     fftw_plan r2c_plan = fftw_plan_many_dft_r2c(1,    // rank == 1D transform
                                     n,      //  list of dimensions
                                     nb_fft, // howmany (to do many ffts on the same core)
-                                    gs(0), // input
+                                    (double*)hs(0), // input
                                     NULL,                                       // inembed
                                     1,                                          // istride
                                     l_fft,                                      // idist
@@ -87,11 +87,11 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			// uint stride = nb_fft*l_fft*i_chunk ;
 			for (uint j = 0; j < nb_fft; j++) {
 				for (uint i = 0; i < l_fft; i++) {
-					gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
+					((double*)(hs(this_thread,j)))[i] = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
 				}
 			}
 			
-			fftw_execute_dft_r2c(r2c_plan, (double*)gs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
+			fftw_execute_dft_r2c(r2c_plan, (double*)hs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
 			
 			for (uint j = 0; j < nb_fft; j++) {
 				// m = 0 
@@ -129,6 +129,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 		}
 	}
 	
+	
 	// Symmetrize
 	for (uint i = (l_fft-1)/2 + 1; i < l_fft; i++) {
 		// m = 0 
@@ -142,6 +143,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			gamma_out(m,i) = gamma_out(m,i_F*m-i);
 		}
 		for (uint i = i_f_max+1+i_F*m; i < l_fft; i++) {
+			// BAD
 			gamma_out(m,i) = gamma_out(m,l_fft-1-i+i_F*m);
 		}
 	}
@@ -159,6 +161,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			gamma_out(j,i) = gamma_out(2*N+1-j,l_fft-i) ;
 		}
 	}
+	
 	
 	// Reduce
 	// We could transform it into direct space before returning 
@@ -210,7 +213,7 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
 	int n_threads= omp_get_max_threads();
 	
 	// Cast to double
-	Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
+	// Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
 	// rfft result
 	Multi_array<complex_d, 3> hs(n_threads, nb_fft, l_fft/2+1, fftw_malloc, fftw_free);
 	// Allocate frency space accumulator
@@ -224,7 +227,7 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
     fftw_plan r2c_plan = fftw_plan_many_dft_r2c(1,    // rank == 1D transform
                                     n,      //  list of dimensions
                                     nb_fft, // howmany (to do many ffts on the same core)
-                                    gs(0), // input
+                                    (double*)hs(0), // input
                                     NULL,                                       // inembed
                                     1,                                          // istride
                                     l_fft,                                      // idist
@@ -261,11 +264,11 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
 			for (uint i_chunk = 0; i_chunk < Nchunk; i_chunk++) {
 				for (uint j = 0; j < nb_fft; j++) {
 					for (uint i = 0; i < l_fft; i++) {
-						gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
+						((double*)hs(this_thread,j))[i] = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
 					}
 				}
 				
-				fftw_execute_dft_r2c(r2c_plan, (double*)gs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
+				fftw_execute_dft_r2c(r2c_plan, (double*)hs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
 				
 				for (uint j = 0; j < nb_fft; j++) {
 					for (uint i = 0; i <= (l_fft-1)/2; i++) {
@@ -306,11 +309,11 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
 			for (uint i_chunk = 0; i_chunk < Nchunk; i_chunk++) {
 				for (uint j = 0; j < nb_fft; j++) {
 					for (uint i = 0; i < l_fft; i++) {
-						gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
+						((double*)hs(this_thread,j))[i] = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
 					}
 				}
 				
-				fftw_execute_dft_r2c(r2c_plan, (double*)gs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
+				fftw_execute_dft_r2c(r2c_plan, (double*)hs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
 				
 				for (uint j = 0; j < nb_fft; j++) {
 					uint l_half = (i_F*m)/2 + (i_F*m)%2  ;
@@ -359,11 +362,11 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
 			for (uint i_chunk = 0; i_chunk < Nchunk; i_chunk++) {
 				for (uint j = 0; j < nb_fft; j++) {
 					for (uint i = 0; i < l_fft; i++) {
-						gs(this_thread,j, i) = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
+						((double*)hs(this_thread,j))[i] = (double)data[nb_fft*l_fft*i_chunk + l_fft*j + i];
 					}
 				}
 				
-				fftw_execute_dft_r2c(r2c_plan, (double*)gs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
+				fftw_execute_dft_r2c(r2c_plan, (double*)hs(this_thread,0),reinterpret_cast<fftw_complex *>(hs(this_thread,0)));
 				
 				for (uint j = 0; j < nb_fft; j++) {
 					uint l_half = (i_F*m)/2 + (i_F*m)%2  ;

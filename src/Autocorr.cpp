@@ -33,8 +33,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 	
 	int n_threads= omp_get_max_threads();
 	
-	// Cast to double
-	// Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
 	// rfft result
 	Multi_array<complex_d, 3> hs(n_threads, nb_fft, l_fft/2+1, fftw_malloc, fftw_free);
 	// Allocate frency space accumulator
@@ -128,8 +126,7 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 			}
 		}
 	}
-	
-	
+		
 	// Symmetrize
 	for (uint i = (l_fft-1)/2 + 1; i < l_fft; i++) {
 		// m = 0 
@@ -162,7 +159,6 @@ autocorr_cyclo (Multi_array<int16_t, 1> &data,
 		}
 	}
 	
-	
 	// Reduce
 	// We could transform it into direct space before returning 
 	// or we could leave it in frequency representation
@@ -187,7 +183,7 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
 				uint nb_fft, 
 				uint l_fft,
 				uint m)
-{
+{	
 	// Comput M and N
 	uint M ;
 	uint N ;
@@ -212,8 +208,6 @@ autocorr_cyclo_m (Multi_array<int16_t, 1> &data,
 	
 	int n_threads= omp_get_max_threads();
 	
-	// Cast to double
-	// Multi_array<double, 3>    gs(n_threads, nb_fft, l_fft, fftw_malloc, fftw_free);
 	// rfft result
 	Multi_array<complex_d, 3> hs(n_threads, nb_fft, l_fft/2+1, fftw_malloc, fftw_free);
 	// Allocate frency space accumulator

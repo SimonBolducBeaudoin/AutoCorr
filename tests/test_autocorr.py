@@ -21,7 +21,7 @@ F = 6
 Period = Fraction(F,R).denominator
 
 nb_fft = 1
-l_fft = 1024
+l_fft = 2048
 delta = 5 # Offset to avoid zero variance
 timesteps = 2**30# Number of time steps
 
@@ -51,58 +51,31 @@ else:
         for t in time
     ], dtype=np.int16)
 
+# Visualizing the result ##########################################################
+acorr_m_1 = autocorr_cyclo(data,F,R,nb_fft  ,l_fft  ,Mmax=-1)
 
-acorr_m_1 = autocorr_cyclo(data,F,R,nb_fft  ,l_fft  ,Mmax=-1,norm="forward")
-acorr_m_2 = autocorr_cyclo(data,F,R,nb_fft*2,l_fft  ,Mmax=-1,norm="forward")
-acorr_m_3 = autocorr_cyclo(data,F,R,nb_fft  ,l_fft//2,Mmax=-1,norm="forward")
-acorr_m_4 = autocorr_cyclo_py_Vpy(data,F,R,l_fft    ,Mmax=-1,norm="forward")
-
-# Visualizing the result
 fig,axs = subplots(2,1)
 time_slice= slice(None,1000)
 for i in range(min(Nchunk,1000)):
     axs[0].plot(data[i*Period:(i+1)*Period],marker='none',ls='-')
 
+
 ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
 for m,acorr in enumerate(acorr_m_1) :
     axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr),label="{}".format(ms[m]))
 
-fig.legend() 
+axs[0].set_title("Input data")
+axs[0].set_xlabel("t")
+axs[1].set_title(r"C++ $\gamma_m(f)$")
+axs[1].set_xlabel("f")
+fig.suptitle("Visualizing the result")
+fig.legend(title="m=") 
 
-# Different nb_fft
-fig,axs = subplots(1,1)
-time_slice= slice(None,1000)
+# Implementation python vs C++ ####################################################
+acorr_m_1 = autocorr_cyclo(data,F,R,nb_fft  ,l_fft  ,Mmax=-1,norm="forward")
+acorr_m_4 = autocorr_cyclo_py_Vpy(data,F,R,l_fft    ,Mmax=-1,norm="forward")
 
-ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
-for m,(acorr1,acorr2) in enumerate(zip(acorr_m_1,acorr_m_2)) :
-    axs.plot(np.fft.fftfreq(l_fft,dt),abs(acorr1-acorr2),label="{}".format(ms[m]))
-
-fig.legend() 
-
-fig,axs = subplots(2,1)
-time_slice= slice(None,1000)
-
-ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
-for m,(acorr1,acorr2) in enumerate(zip(acorr_m_1,acorr_m_2)) :
-    axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1),label="{}".format(ms[m]))
-    axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr2),label="{}".format(ms[m]))
-
-fig.legend() 
-
-
-# Different l_fft
-fig,axs = subplots(2,1)
-time_slice= slice(None,1000)
-
-ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
-for m,(acorr1,acorr3) in enumerate(zip(acorr_m_1,acorr_m_3)) :
-    axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1),label="{}".format(ms[m]))
-    axs[1].plot(np.fft.fftfreq(l_fft//2,dt),abs(acorr3)                         )
-
-fig.legend() 
-
-# Implementation python vs C++
-fig,axs = subplots(2,1)
+fig,axs = subplots(3,1)
 time_slice= slice(None,1000)
 
 ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
@@ -111,11 +84,22 @@ for m,(acorr1,acorr4) in enumerate(zip(acorr_m_1,acorr_m_4)) :
         break
     axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1),label="{}".format(ms[m]))
     axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr4)                         )
+    axs[2].plot(np.fft.fftfreq(l_fft,dt),abs(acorr4-acorr1)                  )
+    
+axs[0].set_title(r"C++ $\gamma_m(f)$")
+axs[0].set_xlabel("f")
+axs[1].set_title(r"python$")
+axs[1].set_xlabel("f")
+axs[2].set_title(r" diff$")
+axs[2].set_xlabel("f")
+fig.suptitle("Implementation python vs C++")
+fig.legend(title="m=") 
 
-fig.legend() 
+# Implementation python vs C++ nb_fft ####################################################
+acorr_m_1 = autocorr_cyclo(data,F,R,2  ,l_fft  ,Mmax=-1,norm="forward")
+acorr_m_4 = autocorr_cyclo_py_Vpy(data,F,R,l_fft    ,Mmax=-1,norm="forward")
 
-# Implementation python vs C++ différence pour m=0 et m=1
-fig,axs = subplots(2,1)
+fig,axs = subplots(3,1)
 time_slice= slice(None,1000)
 
 ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
@@ -123,7 +107,80 @@ for m,(acorr1,acorr4) in enumerate(zip(acorr_m_1,acorr_m_4)) :
     if m > 1 :
         break
     axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1),label="{}".format(ms[m]))
-    axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1-acorr4)                         )
+    axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr4)                         )
+    axs[2].plot(np.fft.fftfreq(l_fft,dt),abs(acorr4-acorr1)                  )
     
+axs[0].set_title(r"C++ $\gamma_m(f)$")
+axs[0].set_xlabel("f")
+axs[1].set_title(r"python$")
+axs[1].set_xlabel("f")
+axs[2].set_title(r" diff$")
+axs[2].set_xlabel("f")
+fig.suptitle("Implementation python vs C++ nb_fft=2")
+fig.legend(title="m=") 
 
-fig.legend() 
+# nb_fft #########################################################################
+nb_fft_1 = 1
+acorr_m_1 = autocorr_cyclo(data, F, R, nb_fft_1, l_fft)
+nb_fft_2 = 2
+acorr_m_2 = autocorr_cyclo(data, F, R, nb_fft_2, l_fft)
+
+fig,axs = subplots(3,1)
+time_slice= slice(None,1000)
+
+ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
+for m,(acorr1,acorr2) in enumerate(zip(acorr_m_1,acorr_m_2)) :
+    if m > 1 :
+        break
+    axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr2),label="{}".format(ms[m]))
+    axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr2)                         )
+    axs[2].plot(np.fft.fftfreq(l_fft,dt),abs(acorr2-acorr1)                  )
+    
+axs[0].set_title(r"C++ Testing nb_fft (shouldn't change anything)")
+axs[0].set_xlabel("f")
+axs[1].set_title(r"python$")
+axs[1].set_xlabel("f")
+fig.suptitle("Implementation python vs C++")
+fig.legend(title="m=") 
+
+
+
+
+
+
+# Different nb_fft ###############################################################
+# acorr_m_1 = autocorr_cyclo(data,F,R,nb_fft  ,l_fft  ,Mmax=-1,norm="forward")
+# acorr_m_2 = autocorr_cyclo(data,F,R,nb_fft*2,l_fft  ,Mmax=-1,norm="forward")
+# acorr_m_3 = autocorr_cyclo(data,F,R,nb_fft  ,l_fft//2,Mmax=-1,norm="forward")
+# acorr_m_4 = autocorr_cyclo_py_Vpy(data,F,R,l_fft    ,Mmax=-1,norm="forward")
+
+# fig,axs = subplots(1,1)
+# time_slice= slice(None,1000)
+
+# ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
+# for m,(acorr1,acorr2) in enumerate(zip(acorr_m_1,acorr_m_2)) :
+    # axs.plot(np.fft.fftfreq(l_fft,dt),abs(acorr1-acorr2),label="{}".format(ms[m]))
+
+# fig.legend() 
+
+# fig,axs = subplots(2,1)
+# time_slice= slice(None,1000)
+
+# ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
+# for m,(acorr1,acorr2) in enumerate(zip(acorr_m_1,acorr_m_2)) :
+    # axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1),label="{}".format(ms[m]))
+    # axs[1].plot(np.fft.fftfreq(l_fft,dt),abs(acorr2),label="{}".format(ms[m]))
+
+# fig.legend() 
+
+
+# Different l_fft ###############################################################
+# fig,axs = subplots(2,1)
+# time_slice= slice(None,1000)
+
+# ms = np.r_[np.r_[:len(acorr_m_1)//2+1] , np.r_[-len(acorr_m_1)//2+1:0]]
+# for m,(acorr1,acorr3) in enumerate(zip(acorr_m_1,acorr_m_3)) :
+    # axs[0].plot(np.fft.fftfreq(l_fft,dt),abs(acorr1),label="{}".format(ms[m]))
+    # axs[1].plot(np.fft.fftfreq(l_fft//2,dt),abs(acorr3)                         )
+
+# fig.legend() 

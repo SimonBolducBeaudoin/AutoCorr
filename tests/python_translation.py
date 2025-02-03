@@ -95,14 +95,27 @@ def autocorr_cyclo_Vpy(data: np.ndarray, i_F: int, l_fft: int, Mmax: int):
         gs = data[stride: stride + l_fft].astype(np.float64)
         hs = rfft(gs)
         
-        gamma[0, :l_fft//2+1] += np.abs(hs[:]) ** 2
+        # gamma[0, :l_fft//2+1] += np.abs(hs[:]) ** 2
+        gamma[0, :l_fft//2] += np.abs(hs[:-1]) ** 2
 
         # m >= M
         for m in range(1, M + 1):
             l_half = (i_F * m) // 2 + ((i_F * m) % 2)
-            gamma[m, :l_half + 1] += hs[:l_half + 1] * hs[ i_F*m :i_F*m -l_half-1:-1]
+            gamma[m, :l_half + 1]       += hs[:l_half + 1] * hs[ i_F*m :i_F*m -l_half-1:-1]
+            gamma[m, i_F*m+1:i_f_max+1] += hs[i_F*m+1:i_f_max+1] * hs[np.r_[i_F*m+1:i_f_max+1]-i_F*m].conjugate()
             # didn't do the rest
 
+    # m = 0
+    gamma[0,(l_fft-1)//2+1:l_fft] = gamma[0,l_fft-((l_fft-1)//2+1):0:-1]
+    
+    # m >= M
+    
+    for m in range(1, M + 1):
+        l_half = (i_F * m) // 2 + ((i_F * m) % 2)
+        # gamma[m,l_half+1:i_F*m+1]      = gamma[m,i_F*m-(l_half+1):-1:-1]
+        gamma[m,l_half+1:i_F*m+1]      = gamma[m,0:i_F*m-l_half][::-1]
+        gamma[m,i_f_max+1+i_F*m:l_fft] = gamma[m,l_fft-1-(i_f_max+1+i_F*m)+i_F*m:l_fft-1-(l_fft)+i_F*m:-1]
+    
     # Normalize
     gamma *= 1.0 / (Nchunk)
 

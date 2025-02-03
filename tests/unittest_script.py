@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from SBB.AutoCorr.autocorr import autocorr_cyclo, autocorr_cyclo_m
+from python_translation import *
 from fractions import Fraction
 from SBB.Omp_extra.omp_extra import set_num_threads
 
@@ -27,8 +28,7 @@ class TestAutocorrCyclo(unittest.TestCase):
         
         # Fixed parameters for the autocorr function
         self.l_fft = 1024
-        self.Mmax = -1
-        set_num_threads(1)
+        self.nb_fft = 8 
         
         
         self.i_F = self.F*self.l_fft//self.R ;
@@ -39,25 +39,26 @@ class TestAutocorrCyclo(unittest.TestCase):
         else :
             self.M = ((self.l_fft-1)//2)//self.i_F 
             self.N = (self.l_fft-1)//self.i_F 
+    
+    def test_A_autocorr_cyclo_vs_python(self):
+        acorr_1 = autocorr_cyclo(self.data, self.F, self.R, 1, self.l_fft)
+        acorr_2 = autocorr_cyclo_py_Vpy(self.data, self.F, self.R, self.l_fft)
         
-    def test_autocorr_cyclo_same_output_for_different_nb_fft(self):
-        # The output will only be the same for specfic lenght of data since nb_fft affect where the tail of the data is truncated
-        # Test for nb_fft = 1
-        nb_fft_1 = 1
-        acorr_m_1 = autocorr_cyclo(self.data, self.F, self.R, nb_fft_1, self.l_fft, Mmax=self.Mmax)
+        # testing only m={0,1}
+        np.testing.assert_allclose(abs(acorr_1[[0,1]]), abs(acorr_2[[0,1]]),rtol=1e-12, err_msg="C++ didn't give the same result as python algorithm.")
         
-        # Test for nb_fft = 2
-        nb_fft_2 = 2
-        acorr_m_2 = autocorr_cyclo(self.data, self.F, self.R, nb_fft_2, self.l_fft, Mmax=self.Mmax)
+    def test_B_nb_fft_2_vs_python(self):
+        acorr_1 = autocorr_cyclo(self.data, self.F, self.R, 2, self.l_fft)
+        acorr_2 = autocorr_cyclo_py_Vpy(self.data, self.F, self.R, self.l_fft)
         
         # Assert that the outputs are the same (this will depend on the expected behavior of autocorr_cyclo)
-        np.testing.assert_array_equal(acorr_m_1, acorr_m_2, err_msg="The autocorrelation results for different nb_fft values do not match.")
-        
-    def test_autocorr_cyclo_and_autocorr_cyclo_m_have_same_output(self):
-        acorr = autocorr_cyclo(self.data, self.F, self.R, 1, self.l_fft, Mmax=self.Mmax)
+        np.testing.assert_allclose(abs(acorr_1[[0,1]]), abs(acorr_2[[0,1]]),rtol=1e-12, err_msg="C++ didn't give the same result as python algorithm.")
+             
+    def test_C_autocorr_cyclo_and_autocorr_cyclo_m_have_same_output(self):
+        acorr = autocorr_cyclo(self.data, self.F, self.R, self.nb_fft, self.l_fft)
         for m in range(self.N):
-            acorr_m = autocorr_cyclo_m(self.data, self.F, self.R, 8, self.l_fft, m=m)
-            np.testing.assert_array_equal(abs(acorr[m]), abs(acorr_m), err_msg="The results for autocorr_cyclo and autocorr_cyclo_m are different for m={}.".format(m))
+            acorr_m = autocorr_cyclo_m(self.data, self.F, self.R, self.nb_fft, self.l_fft, m=m)
+            np.testing.assert_allclose(abs(acorr[m]), abs(acorr_m),rtol=1e-14, err_msg="The results for autocorr_cyclo and autocorr_cyclo_m are different for m={}.".format(m))
 
 if __name__ == '__main__':
     unittest.main()

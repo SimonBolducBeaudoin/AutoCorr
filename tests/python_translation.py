@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.fft import rfft
 
-def autocorr_cyclo_py_Vpy(np_data: np.ndarray, F: int, R: int, l_fft: int, Mmax: int, norm: str):
+def autocorr_cyclo_py_Vpy(np_data: np.ndarray, F: int, R: int, l_fft: int, Mmax: int=-1, norm: str="backward"):
     """
     Python equivalent of the C++ autocorr_cyclo_py function.
 
